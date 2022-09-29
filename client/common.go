@@ -26,7 +26,7 @@ func (wx *WxClient) GetHttpUrl(path APIPath) string {
 
 // 获取发送主体消息
 func GetRequestMsg(msg *MSG) (body string) {
-	_b := &RequetBody{
+	_b := &requetBody{
 		Para: *msg,
 	}
 	b, _ := json.Marshal(_b)

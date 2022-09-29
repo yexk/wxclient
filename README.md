@@ -1,5 +1,8 @@
 # wx client dll by golang 
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/yexk/wxclient.svg)](https://pkg.go.dev/github.com/yexk/wxclient)
+[![Examples](https://img.shields.io/badge/client-examples-yellow)](https://github.com/yexk/wxclient/tree/master/example)
+
 ## 安装 
 ```
 go get github.com/yexk/wxclient 
@@ -19,9 +22,14 @@ func main() {
 	// 启动监听的地址
 	wx := client.NewConnect("127.0.0.1:5555")
 
-	// 注册监听事件
+	// 注册监听事件, 等其他事件
 	wx.RegisterHandlers(client.RecvTxtMsgHandler(Revc))
-	wx.RegisterHandlers(client.UserListHandler(RevcUserList))
+
+	// 通过api获取好友列表
+	userList, _ := wx.ApiGetUserList()
+	for _, v := range userList.Content {
+		fmt.Printf("v.Name: %v, v.Wxcode: %v\n", v.Name, v.Wxcode)
+	}
 
 	wx.Start()
 }
@@ -34,15 +42,6 @@ func Revc(wx *client.WxClient, event *client.Event) {
 		wx.SendTxtMsg(event.Wxid, "私聊：我是自动回复！")
 	}
 }
-
-// 好友列表
-func RevcUserList(wx *client.WxClient, event *client.EventUserList) {
-	for _, v := range event.Content {
-		fmt.Printf("v.Name: %v, ", v.Name)
-		fmt.Printf("v.Wxcode: %v\n", v.Wxcode)
-	}
-}
-
 ```
 
 ## 声明

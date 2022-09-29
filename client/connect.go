@@ -19,6 +19,7 @@ type WxClient struct {
 	RecvWxid string
 }
 
+// 初始化机器人，以及建立基础连接
 func NewConnect(host string) (wx *WxClient) {
 	wx = &WxClient{}
 	wx.parse(host)
@@ -29,8 +30,15 @@ func NewConnect(host string) (wx *WxClient) {
 		panic(err)
 	}
 	wx.ws = ws
-	wx.getSelfInfo() // 获取自个人资料
 	log.Println("connect websocket success!")
+
+	wx.once.Do(func() {
+		info, err := wx.ApiGetPersonalInfo()
+		if err != nil {
+			log.Panicf("login failed: %v", err)
+		}
+		log.Printf("login %s success!", info.Name)
+	})
 
 	// 注册监听事件
 	wx.RegisterHandlers(ReadyHandler(eventAll))
@@ -79,7 +87,7 @@ func (wx *WxClient) readHandler() {
 			// 做一个解析转换
 			event = &Event{
 				ID:       _event.ID,
-				ID1:      _event.Content.ID1,
+				Wxid:     _event.Content.ID1,
 				Content:  _event.Content.Content,
 				Type:     _event.Type,
 				Receiver: _event.Receiver,
@@ -100,10 +108,7 @@ func (wx *WxClient) readHandler() {
 		} else if ev.Type == CHATROOM_MEMBER_NICK {
 			_event := &EventChatrooMmemberNick{}
 			// json字符串特殊处理
-			type e struct {
-				Content string `json:"content"`
-			}
-			_e := &e{}
+			_e := &content{}
 			_nick := &Nick{}
 			json.Unmarshal(msg[:], _e)
 			json.Unmarshal([]byte(_e.Content), _nick)
@@ -118,13 +123,28 @@ func (wx *WxClient) readHandler() {
 			json.Unmarshal(msg[:], _event)
 			wx.handlerChatrooMmember(_event)
 			continue
+		} else if ev.Type == AGREE_TO_FRIEND_REQUEST {
+			_event := &EventPaiyipai{}
+			json.Unmarshal(msg[:], _event)
+			// 数据转换
+			event = &Event{
+				ID:       _event.ID,
+				Wxid:     _event.Content.ID1,
+				Content:  _event.Content.Content,
+				Type:     _event.Type,
+				Receiver: _event.Receiver,
+				Sender:   _event.Sender,
+				Srvid:    _event.Srvid,
+				Status:   _event.Status,
+				Time:     _event.Time,
+			}
 		} else if ev.Type == RECV_PIC_MSG {
 			_event := &EventPicConent{}
 			json.Unmarshal(msg[:], _event)
 			// 做一个解析转换
 			event = &Event{
 				ID:       _event.ID,
-				ID1:      _event.Content.ID1,
+				Wxid:     _event.Content.ID1,
 				Content:  _event.Content.Content,
 				Type:     _event.Type,
 				Receiver: _event.Receiver,
@@ -141,14 +161,6 @@ func (wx *WxClient) readHandler() {
 			json.Unmarshal(msg[:], event)
 		}
 
-		wx.once.Do(func() {
-			if event.Type == PERSONAL_INFO {
-				info := &PersonalInfo{}
-				json.Unmarshal([]byte(event.Content), info)
-				log.Printf("login %s success!", info.Name)
-			}
-		})
-
 		go Handlers.Ready(wx, event)
 
 		wx.handler(event)
@@ -158,7 +170,6 @@ func (wx *WxClient) readHandler() {
 
 // 处理事件
 func (wx *WxClient) handler(event *Event) {
-
 	switch event.Type {
 	case PERSONAL_INFO:
 		go Handlers.PersonalInfo(wx, event)
@@ -167,7 +178,9 @@ func (wx *WxClient) handler(event *Event) {
 	case RECV_TXT_MSG:
 		go Handlers.RecvTxtMsg(wx, event)
 	case RECV_PIC_MSG:
-		go Handlers.RecvTxtMsg(wx, event)
+		go Handlers.RecvPicMsg(wx, event)
+	case NEW_FRIEND_REQUEST:
+		go Handlers.AddFriendRequest(wx, event)
 	case AGREE_TO_FRIEND_REQUEST:
 		go Handlers.AgreeToFriend(wx, event)
 	case TXT_MSG:
@@ -196,18 +209,4 @@ func (wx *WxClient) handlerChatrooMmember(event *EventChatrooMmember) {
 
 func (wx *WxClient) handlerChatrooMmemberNick(event *EventChatrooMmemberNick) {
 	go Handlers.ChatRoomMemberNick(wx, event)
-}
-
-// 获取个人信息
-func (wx *WxClient) getSelfInfo() (i int, err error) {
-	i, err = wx.Send(&MSG{
-		ID:       GetID(),
-		Type:     PERSONAL_INFO,
-		Wxid:     "null",
-		Roomid:   "null",
-		Content:  "null",
-		Nickname: "null",
-		Ext:      "null",
-	})
-	return
 }

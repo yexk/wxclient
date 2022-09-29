@@ -16,7 +16,7 @@ type Event struct {
 	Wxid     string `json:"wxid"` // 发送人 | 群ID
 }
 
-// 引用消息事件 3
+// 图片消息事件 3
 type EventPicConent struct {
 	ID      string `json:"id"`
 	Type    int32  `json:"type"`
@@ -93,16 +93,13 @@ type Nick struct {
 	RoomID string `json:"roomid"`
 }
 
-// 引用消息事件 3
+// 拍一拍 || 添加好友
 type EventPaiyipai struct {
 	ID      string `json:"id"`
 	Type    int32  `json:"type"`
 	Content struct {
 		Content string `json:"content"`
-		Detail  string `json:"detail"` // 图片详情
-		ID1     string `json:"id1"`    // 发送人 | 群ID
-		ID2     string `json:"id2"`    //
-		Thumb   string `json:"thumb"`  // 缩略图
+		ID1     string `json:"id1"` // 发送人 | 群ID
 	} `json:"content"`
 	Receiver string `json:"receiver"`
 	Sender   string `json:"sender"`
@@ -127,4 +124,9 @@ type MSG struct {
 	Content  string      `json:"content"`
 	Nickname string      `json:"nickname"`
 	Ext      interface{} `json:"ext"`
+}
+
+// 内部使用解析content
+type content struct {
+	Content string `json:"content"`
 }

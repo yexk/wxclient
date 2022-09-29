@@ -1,3 +1,4 @@
+// 一些公有的方法库
 package common
 
 import (

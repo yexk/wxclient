@@ -12,7 +12,12 @@ func main() {
 
 	// 注册监听事件
 	wx.RegisterHandlers(client.RecvTxtMsgHandler(Revc))
-	wx.RegisterHandlers(client.UserListHandler(RevcUserList))
+
+	// 通过api获取好友列表
+	userList, _ := wx.ApiGetUserList()
+	for _, v := range userList.Content {
+		fmt.Printf("v.Name: %v, v.Wxcode: %v\n", v.Name, v.Wxcode)
+	}
 
 	wx.Start()
 }
@@ -23,11 +28,5 @@ func Revc(wx *client.WxClient, event *client.Event) {
 		wx.SendTxtMsg(event.Wxid, "群聊：我是自动回复！")
 	} else {
 		wx.SendTxtMsg(event.Wxid, "私聊：我是自动回复！")
-	}
-}
-
-func RevcUserList(wx *client.WxClient, event *client.EventUserList) {
-	for _, v := range event.Content {
-		fmt.Printf("v.Name: %v, v.Wxcode: %v\n", v.Name, v.Wxcode)
 	}
 }

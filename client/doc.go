@@ -1,2 +1,2 @@
-// wecaht bot client
+// wechat-bot dll client
 package client
