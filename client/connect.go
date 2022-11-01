@@ -36,6 +36,7 @@ func NewConnect(host string) (wx *WxClient) {
 		info, err := wx.ApiGetPersonalInfo()
 		if err != nil {
 			log.Panicf("login failed: %v", err)
+			panic(err)
 		}
 		log.Printf("login %s success!", info.Name)
 	})
@@ -61,9 +62,9 @@ func NewConnect(host string) (wx *WxClient) {
 // 启动监听消息
 func (wx *WxClient) Start() {
 	// 监听消息
-	wx.readHandler()
-
-	select {}
+	for {
+		wx.readHandler()
+	}
 }
 
 // 监听消息
