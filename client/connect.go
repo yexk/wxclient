@@ -79,6 +79,7 @@ func (wx *WxClient) readHandler() {
 		err = json.Unmarshal(msg[:], ev)
 		if err != nil {
 			log.Printf("new Connect json.Unmarshal err: %v", err)
+			return
 		}
 		event := &Event{}
 		if ev.Type == RECV_TXT_REFERENCE_MSG {

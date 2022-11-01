@@ -14,6 +14,12 @@ func (wx *WxClient) BoolGroup(wxid string) bool {
 	return reg
 }
 
+// 判断是否为公众号
+func (wx *WxClient) BoolOfficialAccount(wxid string) bool {
+	reg, _ := regexp.MatchString("gh_", wxid)
+	return reg
+}
+
 // 获取ws地址
 func (wx *WxClient) GetWsUrl() string {
 	return wx.wsUrl
