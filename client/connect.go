@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
+	"time"
 
 	"golang.org/x/net/websocket"
 )
@@ -62,9 +63,7 @@ func NewConnect(host string) (wx *WxClient) {
 // 启动监听消息
 func (wx *WxClient) Start() {
 	// 监听消息
-	for {
-		wx.readHandler()
-	}
+	wx.readHandler()
 }
 
 // 监听消息
@@ -72,6 +71,10 @@ func (wx *WxClient) readHandler() {
 	for {
 		var err error
 		msg := wx.readMessage()
+		if msg == nil {
+			time.Sleep(2 * time.Second)
+			continue
+		}
 		// 解析特殊类型
 		type e struct {
 			Type int32 `json:"type"`
@@ -80,7 +83,7 @@ func (wx *WxClient) readHandler() {
 		err = json.Unmarshal(msg[:], ev)
 		if err != nil {
 			log.Printf("new Connect json.Unmarshal err: %v", err)
-			return
+			continue
 		}
 		event := &Event{}
 		if ev.Type == RECV_TXT_REFERENCE_MSG {

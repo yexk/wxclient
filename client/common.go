@@ -82,6 +82,7 @@ again:
 	bytes, err = ioutil.ReadAll(frame)
 	if err != nil {
 		log.Printf("read frame data err %v", err)
+		return nil
 	}
 	return bytes
 }
