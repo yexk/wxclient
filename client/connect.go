@@ -76,100 +76,16 @@ func (wx *WxClient) readHandler() {
 			continue
 		}
 		// 解析特殊类型
-		type e struct {
-			Type int32 `json:"type"`
-		}
-		ev := &e{}
-		err = json.Unmarshal(msg[:], ev)
-		if err != nil {
-			log.Printf("new Connect json.Unmarshal err: %v", err)
-			continue
-		}
+		respEvent := &RespEvent{}
 		event := &Event{}
-		if ev.Type == RECV_TXT_REFERENCE_MSG {
-			_event := &EventReferenceConent{}
-			json.Unmarshal(msg[:], _event)
-			// 做一个解析转换
-			event = &Event{
-				ID:       _event.ID,
-				Wxid:     _event.Content.ID1,
-				Content:  _event.Content.Content,
-				Type:     _event.Type,
-				Receiver: _event.Receiver,
-				Sender:   _event.Sender,
-				Srvid:    _event.Srvid,
-				Status:   _event.Status,
-				Time:     _event.Time,
-			}
-			if wx.BoolGroup(_event.Content.ID1) {
-				event.Wxid = _event.Content.ID1
-				event.ID1 = _event.Content.ID2
-			}
-		} else if ev.Type == USER_LIST || ev.Type == GET_USER_LIST_FAIL || ev.Type == GET_USER_LIST_SUCCSESS {
-			_event := &EventUserList{}
-			json.Unmarshal(msg[:], _event)
-			wx.handlerUserList(_event)
-			continue
-		} else if ev.Type == CHATROOM_MEMBER_NICK {
-			_event := &EventChatrooMmemberNick{}
-			// json字符串特殊处理
-			_e := &content{}
-			_nick := &Nick{}
-			json.Unmarshal(msg[:], _e)
-			json.Unmarshal([]byte(_e.Content), _nick)
-			// ----处理结束
-			json.Unmarshal(msg[:], _event)
-			// 赋值
-			_event.Content = *_nick
-			wx.handlerChatrooMmemberNick(_event)
-			continue
-		} else if ev.Type == CHATROOM_MEMBER {
-			_event := &EventChatrooMmember{}
-			json.Unmarshal(msg[:], _event)
-			wx.handlerChatrooMmember(_event)
-			continue
-		} else if ev.Type == AGREE_TO_FRIEND_REQUEST {
-			_event := &EventPaiyipai{}
-			json.Unmarshal(msg[:], _event)
-			// 数据转换
-			event = &Event{
-				ID:       _event.ID,
-				Wxid:     _event.Content.ID1,
-				Content:  _event.Content.Content,
-				Type:     _event.Type,
-				Receiver: _event.Receiver,
-				Sender:   _event.Sender,
-				Srvid:    _event.Srvid,
-				Status:   _event.Status,
-				Time:     _event.Time,
-			}
-		} else if ev.Type == RECV_PIC_MSG {
-			_event := &EventPicConent{}
-			json.Unmarshal(msg[:], _event)
-			// 做一个解析转换
-			event = &Event{
-				ID:       _event.ID,
-				Wxid:     _event.Content.ID1,
-				Content:  _event.Content.Content,
-				Type:     _event.Type,
-				Receiver: _event.Receiver,
-				Sender:   _event.Sender,
-				Srvid:    _event.Srvid,
-				Status:   _event.Status,
-				Time:     _event.Time,
-			}
-			if wx.BoolGroup(_event.Content.ID1) {
-				event.Wxid = _event.Content.ID1
-				event.ID1 = _event.Content.ID2
-			}
-		} else {
-			json.Unmarshal(msg[:], event)
+		err = json.Unmarshal(msg, respEvent)
+		if respEvent.Code == 200 && err == nil {
+			json.Unmarshal([]byte(respEvent.Data), event)
 		}
 
 		go Handlers.Ready(wx, event)
 
 		wx.handler(event)
-
 	}
 }
 
@@ -195,23 +111,4 @@ func (wx *WxClient) handler(event *Event) {
 	case AT_MSG:
 		go Handlers.AtMsg(wx, event)
 	}
-}
-
-func (wx *WxClient) handlerUserList(event *EventUserList) {
-	switch event.Type {
-	case USER_LIST:
-		go Handlers.UserList(wx, event)
-	case GET_USER_LIST_SUCCSESS:
-		go Handlers.UserList(wx, event)
-	case GET_USER_LIST_FAIL:
-		go Handlers.UserList(wx, event)
-	}
-}
-
-func (wx *WxClient) handlerChatrooMmember(event *EventChatrooMmember) {
-	go Handlers.ChatRoomMember(wx, event)
-}
-
-func (wx *WxClient) handlerChatrooMmemberNick(event *EventChatrooMmemberNick) {
-	go Handlers.ChatRoomMemberNick(wx, event)
 }

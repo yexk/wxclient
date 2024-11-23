@@ -1,19 +1,29 @@
 package client
 
 // 消息事件
+type RespEvent struct {
+	Code    int    `json:"code"`
+	Data    string `json:"data"`
+	Message string `json:"message"`
+}
+
 type Event struct {
-	ID       string `json:"id"`
-	ID1      string `json:"id1"` // 发送人
-	ID2      string `json:"id2"` //
-	ID3      string `json:"id3"`
-	Type     int32  `json:"type"`
-	Content  string `json:"content"`
-	Receiver string `json:"receiver"`
-	Sender   string `json:"sender"`
-	Srvid    int8   `json:"srvid"`
-	Status   string `json:"status"`
-	Time     string `json:"time"`
-	Wxid     string `json:"wxid"` // 发送人 | 群ID
+	ID        string `json:"id"`
+	ID1       string `json:"id1"` // 发送人
+	ID2       string `json:"id2"` //
+	ID3       string `json:"id3"`
+	Type      int32  `json:"type"`
+	Content   string `json:"content"`
+	Receiver  string `json:"receiver"`
+	Sender    string `json:"sender"`
+	Srvid     int8   `json:"srvid"`
+	Status    string `json:"status"`
+	Time      string `json:"time"`
+	Wxid      string `json:"wxid"` // 发送人 | 群ID
+	ImagePath string `json:"image_path"`
+	ThumbPath string `json:"thumb_path"`
+	Title     string `json:"title"`
+	Msg       string `json:"msg"`
 }
 
 // 图片消息事件 3
@@ -110,20 +120,16 @@ type EventPaiyipai struct {
 
 // 个人资料
 type PersonalInfo struct {
-	Code string `json:"wx_code"`
-	Id   string `json:"wx_id"`
-	Name string `json:"wx_name"`
+	Code    string `json:"wxcode"`
+	Id      string `json:"wxid"`
+	Name    string `json:"nick"`
+	HeadImg string `json:"head_img"`
 }
 
 // 消息主体
 type MSG struct {
-	ID       string      `json:"id"`
-	Type     int32       `json:"type"`
-	Roomid   string      `json:"roomid"`
-	Wxid     string      `json:"wxid"`
-	Content  string      `json:"content"`
-	Nickname string      `json:"nickname"`
-	Ext      interface{} `json:"ext"`
+	Wxid    string `json:"wxid"`
+	Content string `json:"content"`
 }
 
 // 内部使用解析content

@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 
 	"github.com/yexk/wxclient/common"
 )
@@ -19,9 +19,9 @@ const (
 	// at消息接口
 	SEND_AT_MSG_API APIPath = "/api/sendatmsg"
 	// 图片消息接口
-	SEND_PIC_API APIPath = "/api/sendpic"
+	SEND_PIC_API APIPath = "/api/send_pic"
 	// 发消息
-	SEND_TXT_MSG_API APIPath = "/api/sendtxtmsg"
+	SEND_TXT_MSG_API APIPath = "/api/send_txt"
 	// 发附件
 	SEND_ATTATCH_API APIPath = "/api/sendattatch"
 	// 获取别名
@@ -33,19 +33,14 @@ const (
 	// 获取成员列表
 	GET_CHATROOM_MEMBER_LIST_API APIPath = "/api/get_charroom_member_list"
 	// 获取个人信息
-	GET_PERSONAL_INFO_API APIPath = "/api/get_personal_info"
+	GET_PERSONAL_INFO_API APIPath = "/api/get_self"
 )
 
 // 获取群成员昵称
 func (wx *WxClient) ApiGetMembernick(wxid, roomid string) (nick *Nick, err error) {
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     CHATROOM_MEMBER_NICK,
-		Wxid:     wxid,
-		Roomid:   roomid,
-		Content:  "null",
-		Nickname: "null",
-		Ext:      "null",
+		Wxid:    wxid,
+		Content: "null",
 	}
 	_e := &content{}
 	nick = &Nick{}
@@ -57,7 +52,7 @@ func (wx *WxClient) ApiGetMembernick(wxid, roomid string) (nick *Nick, err error
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -68,15 +63,10 @@ func (wx *WxClient) ApiGetMembernick(wxid, roomid string) (nick *Nick, err error
 
 // 群里发at消息
 func (wx *WxClient) ApiSendAtMsg(wxid, content, roomid string) (event *Event, err error) {
-	nickname, _ := wx.ApiGetMembernick(wxid, roomid)
+	// nickname, _ := wx.ApiGetMembernick(wxid, roomid)
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     AT_MSG,
-		Wxid:     wxid,
-		Roomid:   roomid,
-		Content:  content,
-		Nickname: nickname.Nick,
-		Ext:      "null",
+		Wxid:    wxid,
+		Content: content,
 	}
 	event = &Event{}
 
@@ -87,7 +77,7 @@ func (wx *WxClient) ApiSendAtMsg(wxid, content, roomid string) (event *Event, er
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -98,15 +88,10 @@ func (wx *WxClient) ApiSendAtMsg(wxid, content, roomid string) (event *Event, er
 // 发送文本消息
 func (wx *WxClient) ApiSendTxtMsg(wxid, content string) (event *Event, err error) {
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     TXT_MSG,
-		Wxid:     wxid,
-		Roomid:   "null",
-		Content:  content,
-		Nickname: "null",
-		Ext:      "null",
+		Wxid:    wxid,
+		Content: content,
 	}
-	event = &Event{}
+	respEvent := &RespEvent{}
 
 	requestBody := GetRequestMsg(msg)
 	url := wx.GetHttpUrl(SEND_TXT_MSG_API)
@@ -115,24 +100,21 @@ func (wx *WxClient) ApiSendTxtMsg(wxid, content string) (event *Event, err error
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal(b, event)
+	json.Unmarshal(b, respEvent)
+
+	json.Unmarshal([]byte(respEvent.Data), event)
 	return
 }
 
 // 发送图片消息
 func (wx *WxClient) ApiSendPicMsg(wxid, content string) (event *Event, err error) {
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     PIC_MSG,
-		Wxid:     wxid,
-		Roomid:   "null",
-		Content:  content,
-		Nickname: "null",
-		Ext:      "null",
+		Wxid:    wxid,
+		Content: content,
 	}
 	event = &Event{}
 
@@ -143,7 +125,7 @@ func (wx *WxClient) ApiSendPicMsg(wxid, content string) (event *Event, err error
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -154,13 +136,8 @@ func (wx *WxClient) ApiSendPicMsg(wxid, content string) (event *Event, err error
 // 获取好友列表
 func (wx *WxClient) ApiGetUserList() (event *EventUserList, err error) {
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     USER_LIST,
-		Wxid:     "null",
-		Roomid:   "null",
-		Content:  "null",
-		Nickname: "null",
-		Ext:      "null",
+		Wxid:    "null",
+		Content: "null",
 	}
 	event = &EventUserList{}
 
@@ -171,7 +148,7 @@ func (wx *WxClient) ApiGetUserList() (event *EventUserList, err error) {
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -182,13 +159,8 @@ func (wx *WxClient) ApiGetUserList() (event *EventUserList, err error) {
 // 获取群列表
 func (wx *WxClient) ApiGetChatRoomList() (member *EventChatrooMmember, err error) {
 	msg := &MSG{
-		ID:       GetID(),
-		Type:     CHATROOM_MEMBER,
-		Wxid:     "null",
-		Roomid:   "null",
-		Content:  "null",
-		Nickname: "null",
-		Ext:      "null",
+		Wxid:    "null",
+		Content: "null",
 	}
 	member = &EventChatrooMmember{}
 
@@ -199,7 +171,7 @@ func (wx *WxClient) ApiGetChatRoomList() (member *EventChatrooMmember, err error
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -209,30 +181,20 @@ func (wx *WxClient) ApiGetChatRoomList() (member *EventChatrooMmember, err error
 
 // 获取个人资料
 func (wx *WxClient) ApiGetPersonalInfo() (info *PersonalInfo, err error) {
-	msg := &MSG{
-		ID:       GetID(),
-		Type:     PERSONAL_INFO,
-		Wxid:     "null",
-		Roomid:   "null",
-		Content:  "null",
-		Nickname: "null",
-		Ext:      "null",
-	}
-	_e := &content{}
+	_e := &RespEvent{}
 	info = &PersonalInfo{}
 
-	requestBody := GetRequestMsg(msg)
 	url := wx.GetHttpUrl(GET_PERSONAL_INFO_API)
-	resp, err := common.HttpPost(url, requestBody, nil)
+	resp, err := common.HttpPost(url, "", nil)
 	if err != nil {
 		return
 	}
 	defer resp.Body.Close()
-	b, err := ioutil.ReadAll(resp.Body)
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 	json.Unmarshal(b, _e)
-	json.Unmarshal([]byte(_e.Content), info)
+	json.Unmarshal([]byte(_e.Data), info)
 	return
 }

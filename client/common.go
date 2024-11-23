@@ -2,7 +2,7 @@ package client
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/url"
 	"regexp"
@@ -32,10 +32,7 @@ func (wx *WxClient) GetHttpUrl(path APIPath) string {
 
 // 获取发送主体消息
 func GetRequestMsg(msg *MSG) (body string) {
-	_b := &requetBody{
-		Para: *msg,
-	}
-	b, _ := json.Marshal(_b)
+	b, _ := json.Marshal(msg)
 	return string(b)
 }
 
@@ -79,7 +76,7 @@ again:
 		goto again
 	}
 
-	bytes, err = ioutil.ReadAll(frame)
+	bytes, err = io.ReadAll(frame)
 	if err != nil {
 		log.Printf("read frame data err %v", err)
 		return nil
